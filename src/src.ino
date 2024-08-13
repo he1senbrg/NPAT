@@ -9,9 +9,12 @@ HTTPClient http;
 WiFiClientSecure client;
 Ticker ticker;
 
-const char* ssid = "ssid";
-const char* password = "password";
-const char* graphql_endpoint_main = "https://spacex-production.up.railway.app/";
+
+const char* ssid = "";
+const char* password = "";
+// const char* graphql_endpoint_main = "https://notarobot.pythonanywhere.com/graphql";
+const char* graphql_endpoint_main = "graphql_endpoint";
+const char* secretKey = "your_secret_key";
 
 void disablePromiscuousMode() {
   wifi_promiscuous_enable(DISABLE);
@@ -60,13 +63,26 @@ static void sendToServer() {
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  Serial.println("Found MAC addresses:");
+  String graphql_query_start = "{\"query\": \"mutation MyMutation { markAttendance(macList: \\\"";
+  String graphql_query_middle = "\\\", secretKey: \\\"";
+  String graphql_query_end = "\\\") { date id memberId }}\"}";
+  
+  String macListString = "";
   for (int i = 0; i < foundMacAddresses.size(); i++) {
-    Serial.println(foundMacAddresses[i].c_str());
+    macListString += foundMacAddresses[i].c_str();
+    if (i < foundMacAddresses.size() - 1) {
+      macListString += ",";
+    }
   }
+
+  String graphql_query = graphql_query_start + macListString + graphql_query_middle + secretKey + graphql_query_end;
+
+  Serial.println("GraphQL Query:");
+  Serial.println(graphql_query);
   
   if (WiFi.status() == WL_CONNECTED) {
-    String graphql_query = "{\"query\": \"query Location { rockets { country }}\"}";
+    // String graphql_query = "{\"query\": \"mutation MyMutation { markAttendance(macList: \"\", secretKey: \"\") { date id memberId }}\"}";
+    
 
     http.begin(client, graphql_endpoint_main);
     http.addHeader("Content-Type", "application/json");

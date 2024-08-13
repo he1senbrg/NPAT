@@ -106,7 +106,7 @@ static void sendToServer() {
   } else {
     Serial.println("Not connected to WiFi");
   }
-
+  foundMacAddresses.clear();
   enablePromiscuousMode();
 }
 

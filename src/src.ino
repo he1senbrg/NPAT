@@ -22,10 +22,10 @@ struct tm timeinfo;
 char dateStr[11];
 
 // Network related variables
-const char* ssid = "Bifrost 2.0";
-const char* password = "!arobot_";
+const char* ssid = "";
+const char* password = "";
 const char* graphql_endpoint_main = "https://fakeroot.shuttleapp.rs";
-const char* secretKey = "amF0SS2024";
+const char* secretKey = "";
 
 const char* fetchQuery = "{\"query\": \"query fetch { getMember { id macaddress } }\"}";
 
@@ -70,7 +70,7 @@ void setup() {
 }
 
 void loop() {
-  delay(10000);
+  delay(60000);
   sendToServer();
 }
 

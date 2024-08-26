@@ -17,21 +17,22 @@ Ticker ticker;
 // Time related variables
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 19800;
-const int daylightOffset_sec = 3600;
+const int daylightOffset_sec = 0;
 struct tm timeinfo;
 char dateStr[11];
 
 // Network related variables
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "Bifrost 2.0";
+const char* password = "!arobot_";
 const char* graphql_endpoint_main = "https://fakeroot.shuttleapp.rs";
-const char* secretKey = "";
+const char* secretKey = "amF0SS2024";
 
 const char* fetchQuery = "{\"query\": \"query fetch { getMember { id macaddress } }\"}";
 
 // Member data related variables
 StaticJsonDocument<2000> memberData;
 std::map<String,String> memberMap;
+std::map<String,String> hmacMap;
 
 void setup() {
   Serial.begin(115200);
@@ -48,6 +49,8 @@ void setup() {
   Serial.println("\nDate:");
   strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", &timeinfo);
   Serial.println(dateStr);
+
+  createHMACMap();
 
   // set the WiFi chip to "promiscuous" mode aka monitor mode
   delay(10);
@@ -67,7 +70,7 @@ void setup() {
 }
 
 void loop() {
-  delay(60000);
+  delay(10000);
   sendToServer();
 }
 
@@ -100,6 +103,21 @@ void fetchMemberData() {
 
   Serial.println("Member map created");
   Serial.println(memberMap.size());
+}
+
+void createHMACMap() {
+  Serial.print("HMAC date : ");
+  Serial.println(dateStr);
+  for (int i = 0; i < memberData["data"]["getMember"].size(); i++) {
+    String memberId = memberData["data"]["getMember"][i]["id"];
+    String hmac = createHash(memberId,dateStr);
+    Serial.println(memberId);
+    Serial.println(hmac);
+    hmacMap[memberId] = hmac;
+  }
+
+  Serial.print("HMAC map size : ");
+  Serial.println(hmacMap.size());
 
   memberData.clear();
 }
@@ -146,7 +164,7 @@ static void sendToServer() {
   for (int i = 0; i < foundMacAddresses.size(); i++) {
     if (memberMap.find(foundMacAddresses[i].c_str()) != memberMap.end()) {
       String member_id = memberMap[foundMacAddresses[i].c_str()];
-      graphql_query_middle += " a" + String(i) + ": markAttendance(id:"+ member_id +",date:\\\""+dateStr+"\\\",isPresent:true,hmacSignature:\\\""+ createHash(member_id,dateStr) +"\\\"){ id }";
+      graphql_query_middle += " a" + String(i) + ": markAttendance(id:"+ member_id +",date:\\\""+dateStr+"\\\",isPresent:true,hmacSignature:\\\""+ hmacMap[member_id] +"\\\"){ id }";
     }
   }
 

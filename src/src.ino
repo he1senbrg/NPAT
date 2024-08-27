@@ -70,7 +70,7 @@ void setup() {
 }
 
 void loop() {
-  delay(60000);
+  delay(90000);
   sendToServer();
 }
 
